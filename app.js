@@ -72,6 +72,8 @@ function Question(title, answers) {
     } else {
       quiz.indexCurrentQuestion++;
     }
+
+    console.log(quiz.indexCurrentQuestion);
     quiz.showCurrentQuestion();
   };
 }
@@ -242,7 +244,7 @@ function checkIfOngoingPoll() {
     ) {
       quiz.indexCurrentQuestion = parseInt(answerArrayEl1 + 2);
     } else {
-      quiz.indexCurrentQuestion = parseInt(answerArrayEl2 + 1);
+      quiz.indexCurrentQuestion = parseInt(answerArrayEl1 + 1);
     }
     valUserName = usersArray[usersArray.length - 1].username;
     elUserNameView.innerHTML =
