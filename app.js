@@ -4,13 +4,22 @@ let elQuestionScreen = document.getElementById("questionscreen");
 let elWelcomeScreen = document.getElementById("welcomescreen");
 let elGoodbyeScreen = document.getElementById("goodbyescreen");
 let elUserResponseScreen = document.getElementById("user_responsescreen");
+let elAlreadyAnsweredScreen = document.getElementById("alreadyansweredscreen");
 let elWelcomeBtn = document.getElementById("welcome_btn");
-let elBackToStartBtn = document.getElementById("backToStart_btn");
+let elBackToStartBtns = document.querySelectorAll(".backToStart_btn");
 let elResponseBtn = document.getElementById("responses_btn");
 let elVolverBtn = document.getElementById("volver_btn");
 let elNumberOfQuestions = document.getElementById("numberOfQuestions");
 let elUserNameView = document.getElementById("userNameView");
 let valUserName = "";
+
+// Initiate Storage Arrays
+if (localStorage.getItem("usuariosEncuesta") == null) {
+  localStorage.setItem("usuariosEncuesta", JSON.stringify([]));
+}
+if (sessionStorage.getItem("usuariosEncuesta") == null) {
+  sessionStorage.setItem("usuariosEncuesta", JSON.stringify([]));
+}
 
 function Question(title, answers) {
   this.title = title;
@@ -198,8 +207,11 @@ elNumberOfQuestions.textContent = quiz.questions.length;
 // Check if user left an ongoing poll
 function checkIfOngoingPoll() {
   let usersArray = JSON.parse(localStorage.getItem("usuariosEncuesta"));
-
-  if (usersArray[usersArray.length - 1].answers.length < 16) {
+  if (
+    usersArray.length >= 1 &&
+    usersArray[usersArray.length - 1].answers.length >= 1 &&
+    usersArray[usersArray.length - 1].answers.length < 16
+  ) {
     elWelcomeScreen.style.display = "none";
     elQuestionScreen.style.display = "block";
     elUserNameView.style.display = "block";
@@ -217,7 +229,6 @@ function checkIfOngoingPoll() {
     let currentPollQuestion = answerArrayEl1;
     let selectedAnswer = answerArrayEl2;
 
-    console.log(currentPollQuestion);
     if (
       ((currentPollQuestion == 1 ||
         currentPollQuestion == 4 ||
@@ -245,20 +256,29 @@ checkIfOngoingPoll();
 // Buttons and their functions
 
 const seeFirstQuestion = () => {
+  valUserName = document.getElementById("enter_username").value;
+  if (!valUserName.length) valUserName = "Anónimo";
+
+  let usersSessionArray = JSON.parse(
+    sessionStorage.getItem("usuariosEncuesta")
+  );
+  if (usersSessionArray.length >= 1) {
+    usersSessionArray.forEach((user) => {
+      if (valUserName == user.username) {
+        elWelcomeScreen.style.display = "none";
+        elAlreadyAnsweredScreen.style.display = "block";
+      }
+    });
+    return;
+  }
+
   elWelcomeScreen.style.display = "none";
   elQuestionScreen.style.display = "block";
   elUserNameView.style.display = "block";
 
-  valUserName = document.getElementById("enter_username").value;
-  if (!valUserName.length) valUserName = "Anónimo";
-
-  if (localStorage.getItem("usuariosEncuesta") === null) {
-    localStorage.setItem("usuariosEncuesta", JSON.stringify([]));
-  }
-
   let usersArray = JSON.parse(localStorage.getItem("usuariosEncuesta"));
-
   usersArray.push({ username: valUserName, answers: [] });
+
   localStorage.setItem("usuariosEncuesta", JSON.stringify(usersArray));
 
   elUserNameView.innerHTML =
@@ -273,11 +293,23 @@ const returnToStart = () => {
   elQuestionScreen.style.display = "none";
   elGoodbyeScreen.style.display = "none";
   elUserNameView.style.display = "none";
+  elAlreadyAnsweredScreen.style.display = "none";
   quiz.indexCurrentQuestion = 0;
-  console.log(JSON.parse(localStorage.getItem("usuariosEncuesta")));
+
+  if (sessionStorage.getItem("usuariosEncuesta") === null) {
+    sessionStorage.setItem("usuariosEncuesta", JSON.stringify([]));
+  }
+
+  let usersSessionArray = JSON.parse(
+    sessionStorage.getItem("usuariosEncuesta")
+  );
+  usersSessionArray.push({ username: valUserName });
+  sessionStorage.setItem("usuariosEncuesta", JSON.stringify(usersSessionArray));
 };
 
-elBackToStartBtn.addEventListener("click", returnToStart);
+elBackToStartBtns.forEach((btn) => {
+  btn.addEventListener("click", returnToStart);
+});
 
 const volverAlInicio = () => {
   elUserResponseScreen.style.display = "none";
@@ -299,7 +331,7 @@ const showResponses = () => {
 
   if (localStorage.getItem("usuariosEncuesta") === null) {
     let p = document.createElement("p");
-    p.textContent = "No hay respuestas de otros usuarios en memoria";
+    p.textContent = "No hay respuestas de otros usuarios";
     elUserResponseScreen.append(p);
 
     elUserResponseScreen.append(volverBtn);
